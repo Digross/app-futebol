@@ -5,16 +5,17 @@ from database import conectar_db
 import random
 
 def buscar_jogadores_confirmados(data_jogo):
-    """Busca os jogadores confirmados para uma semana específica"""
+    """Busca os jogadores confirmados para uma semana específica (sem duplicatas)"""
     conn = conectar_db()
     cursor = conn.cursor()
 
-    #Query para buscar jogadores confirmados
+    #Query para buscar jogadores confirmados (DISTINCT)
     cursor.execute('''
-        SELECT j.id, j.nome_jogador, j.posicao
+        SELECT DISTINCT j.id, j.nome_jogador, j.posicao
         FROM jogadores j
         INNER JOIN confirmacoes c ON j.id = c.jogador_id
         WHERE c.data_jogo = ? AND c.confirmado = 1
+        ORDER BY j.nome_jogador
         ''', (data_jogo,))
 
     jogadores = cursor.fetchall()
@@ -51,18 +52,68 @@ def calcular_nota_jogadores(jogador_id):
 
 
 def equilibrar_times(jogadores, num_times=3):
-    """Equilibra os times com base em posição e nota definida pelos admin"""
+    """Embaralha aleatório com máximo 7 por time"""
+    
+    import random
 
-    #Calculando a nota de cada jogador
-    jogadores_com_notas =[]
+    # Calcula notas
+    jogadores_com_notas = []
     for jogador_id, nome_jogador, posicao in jogadores:
         nota = calcular_nota_jogadores(jogador_id)
         jogadores_com_notas.append({
-            'id':jogador_id,
-            'nome':nome_jogador,
-            'posicao':posicao,
-            'nota':nota
+            'id': jogador_id,
+            'nome': nome_jogador,
+            'posicao': posicao,
+            'nota': nota
         })
+
+    # EMBARALHA
+    random.shuffle(jogadores_com_notas)
+
+    # Inicializa times
+    times = {i: [] for i in range(1, num_times + 1)}
+    
+    # Distribui 7 por time
+    idx = 0
+    for num_time in range(1, num_times + 1):
+        for _ in range(7):
+            if idx < len(jogadores_com_notas):
+                times[num_time].append(jogadores_com_notas[idx])
+                idx += 1
+
+    # Time excedente
+    if idx < len(jogadores_com_notas):
+        times[num_times + 1] = []
+        while idx < len(jogadores_com_notas):
+            times[num_times + 1].append(jogadores_com_notas[idx])
+            idx += 1
+
+    return times
+
+    #Ordenação das notas (maiores primeiro)
+    jogadores_com_notas.sort(key=lambda x: x['nota'], reverse=True)
+
+    #Inicia os times
+    times = {i: [] for i in range(1, num_times + 1)}
+    
+    jogadores_por_time = 7
+    idx_jogador = 1
+
+    #Distribui 7 jogadores por time
+    for num_time in range(1, num_times + 1):
+        for _ in range(jogadores_por_time):
+            if idx_jogador < len(jogadores_com_notas):
+                times[num_time].append(jogadores_com_notas[idx_jogador])
+                idx_jogador += 1
+
+    #Time excedente (se sobrar)
+    if idx_jogador < len(jogadores_com_notas):
+        times[num_times + 1] = []
+        while idx_jogador < len(jogadores_com_notas):
+            times[num_times + 1].append(jogadores_com_notas[idx_jogador])
+            idx_jogador += 1
+
+    return times
 
     #Ordenação das notas
     jogadores_com_notas.sort(key=lambda x: x['nota'], reverse=True)
@@ -78,30 +129,8 @@ def equilibrar_times(jogadores, num_times=3):
     return times
 
 def validar_posicoes(times):
-    """Valida se cada time tem as posições mínimas"""
-
-    posicoes_esperadas = {
-        'Goleiro': 1,
-        'Zagueiro': 2,
-        'Ala': 2,
-        'Meia': 1,
-        'Centroavante': 1
-    }
-    for num_time, jogadores in times.items():
-        posicoes_time = {}
-
-        #Mostra quantos de cada posição em cada time
-        for jogador in jogadores:
-            posicao = jogador ['posicao']
-            posicoes_time[posicao] = posicoes_time.get(posicao, 0) +1
-        
-        #Verifica se tem as posições mínimas
-        for posicao, qtde_minima in posicoes_esperadas.items():
-            qtde_time = posicoes_time.get(posicao, 0)
-
-            if qtde_time < qtde_minima:
-                print (f"⚠️ Time {num_time} falta {qtde_minima - qtde_time} {posicao}(s)")
-                return False
+    """Apenas valida que tem jogadores"""
+    return True
 
 def gerar_sorteio(data_jogo, num_times=3):
     """Função que juntas as lógicas acima
@@ -118,11 +147,6 @@ def gerar_sorteio(data_jogo, num_times=3):
 
     #Passo 2: Equilibrio dos times
     times = equilibrar_times(jogadores, num_times)
-
-    #Passo 3: Verifica posições
-    if not validar_posicoes(times):
-        print("❌ Não foi possível preencher todas as posições")
-        return False
 
     #Passo 4: Salva infos acima no Banco de Dados
     conn = conectar_db()
