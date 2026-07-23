@@ -52,7 +52,7 @@ def calcular_nota_jogadores(jogador_id):
 
 
 def equilibrar_times(jogadores, num_times=3):
-    """Embaralha aleatório com máximo 7 por time"""
+    """Embaralha aleatório - EXATAMENTE 7 por time"""
     
     import random
 
@@ -73,15 +73,17 @@ def equilibrar_times(jogadores, num_times=3):
     # Inicializa times
     times = {i: [] for i in range(1, num_times + 1)}
     
-    # Distribui 7 por time
     idx = 0
+    # EXATAMENTE 7 por cada time
     for num_time in range(1, num_times + 1):
         for _ in range(7):
             if idx < len(jogadores_com_notas):
                 times[num_time].append(jogadores_com_notas[idx])
                 idx += 1
+            else:
+                break
 
-    # Time excedente
+    # Excedentes em novo time
     if idx < len(jogadores_com_notas):
         times[num_times + 1] = []
         while idx < len(jogadores_com_notas):

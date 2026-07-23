@@ -476,7 +476,7 @@ def buscar_todas_datas():
     return [d[0] for d in datas]
 
 def buscar_times_gerados(data_jogo):
-    """Busca os times gerados para uma data"""
+    """Busca os times gerados para uma data (apenas jogadores ativos)"""
     conn = conectar_db()
     cursor = conn.cursor()
     
@@ -484,13 +484,12 @@ def buscar_times_gerados(data_jogo):
         SELECT numero_time, jogador_id, j.nome_jogador, j.posicao
         FROM sorteio_semanal s
         JOIN jogadores j ON s.jogador_id = j.id
-        WHERE s.data_jogo = ?
+        WHERE s.data_jogo = ? AND j.ativo = 1
         ORDER BY numero_time, j.nome_jogador
     ''', (data_jogo,))
     
     times = cursor.fetchall()
     conn.close()
-
     
     return times
 
