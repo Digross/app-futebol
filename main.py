@@ -30,16 +30,18 @@ CORES = {
 # CONFIG PAGE
 st.set_page_config(page_title="BOLA Y BRASA", layout="wide", initial_sidebar_state="collapsed")
 
-# ESTILO
+# ESTILO ÚNICO - TUDO JUNTO
 st.markdown(f"""
 <style>
     .stApp {{
         background: linear-gradient(135deg, {CORES['azul_escuro']} 0%, #1a4d7a 100%);
     }}
+    
     h1, h2, h3 {{
         color: {CORES['dourado']};
         font-weight: bold;
     }}
+    
     .stButton > button {{
         background-color: {CORES['dourado']};
         color: {CORES['azul_escuro']};
@@ -48,10 +50,12 @@ st.markdown(f"""
         font-weight: bold;
         padding: 12px 24px;
     }}
+    
     .stButton > button:hover {{
         background-color: {CORES['vermelho']};
         color: {CORES['branco']};
     }}
+    
     .stMetric {{
         background: rgba(255,255,255,0.1);
         padding: 15px;
@@ -61,10 +65,10 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# HEADER
+# HEADER - LOGO
 col1, col2, col3 = st.columns([1, 1, 1])
 with col2:
-    st.write("")  # spacing
+    st.image("brasao.png", width=80)
 
 st.divider()
 
