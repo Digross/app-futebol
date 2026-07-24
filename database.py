@@ -522,6 +522,47 @@ def deletar_sorteio_anterior(data_jogo):
     conn.commit()
     conn.close()
 
+def inserir_solicitacao_exclusao(marcacao_id, jogador_nome, tipo, data_jogo):
+    """Insere uma solicitação de exclusão de marcação"""
+    conn = conectar_db()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        INSERT INTO solicitacoes_exclusao 
+        (marcacao_id, jogador_nome, tipo, data_jogo, status)
+        VALUES (?, ?, ?, ?, 'pendente')
+    ''', (marcacao_id, jogador_nome, tipo, data_jogo))
+    
+    conn.commit()
+    conn.close()
+
+def buscar_solicitacoes_exclusao(data_jogo):
+    """Busca solicitações pendentes"""
+    conn = conectar_db()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT id, marcacao_id, jogador_nome, tipo
+        FROM solicitacoes_exclusao
+        WHERE data_jogo = ? AND status = 'pendente'
+    ''', (data_jogo,))
+    
+    solicitacoes = cursor.fetchall()
+    conn.close()
+    
+    return solicitacoes
+
+def aprovar_solicitacao(solicitacao_id, marcacao_id):
+    """Aprova e deleta a marcação"""
+    conn = conectar_db()
+    cursor = conn.cursor()
+    
+    cursor.execute('DELETE FROM marcacoes WHERE id = ?', (marcacao_id,))
+    cursor.execute('DELETE FROM solicitacoes_exclusao WHERE id = ?', (solicitacao_id,))
+    
+    conn.commit()
+    conn.close()
+
 def iniciar_banco():
     """Cria as tabelas se não existirem e verifica versão"""
     
@@ -544,6 +585,19 @@ def iniciar_banco():
     # Cria o banco novo
     conn = conectar_db()
     cursor = conn.cursor()
+
+    # TABELA SOLICITAÇÕES
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS solicitacoes_exclusao (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            marcacao_id INTEGER NOT NULL,
+            jogador_nome TEXT NOT NULL,
+            tipo TEXT NOT NULL,
+            data_jogo DATE NOT NULL,
+            status TEXT DEFAULT 'pendente',
+            data_solicitacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
 
     #TABELA JOGADORES
     cursor.execute('''

@@ -248,12 +248,13 @@ with aba2:
                 
                 st.divider()
                 
-                # HISTÓRICO
-                st.subheader("🗑️ Deletar Marcações")
+                # SOLICITAR EXCLUSÃO
+                st.subheader("🗑️ Solicitar Exclusão de Marcação")
                 
                 marcacoes = buscar_marcacoes(data_jogo)
                 
                 if marcacoes:
+                    st.write("**Clique para solicitar exclusão:**")
                     for nome, tipo, marcacao_id in marcacoes:
                         col1, col2 = st.columns([4, 1])
                         
@@ -262,10 +263,8 @@ with aba2:
                             st.write(f"{icone} {nome} - {tipo.upper()}")
                         
                         with col2:
-                            if st.button("❌", key=f"delete_{marcacao_id}"):
-                                deletar_marcacao(marcacao_id)
-                                st.success("Deletado!")
-                                st.rerun()
+                            if st.button("❌", key=f"solicitar_{marcacao_id}"):
+                                st.info("✅ Solicitação enviada ao admin!")
                 else:
                     st.info("Nenhuma marcação registrada")
             else:
@@ -413,6 +412,29 @@ with aba3:
                     st.write("")
             else:
                 st.info("Nenhum sorteio gerado ainda")
+            
+            st.divider()
+            
+            # DELETAR MARCAÇÕES
+            st.subheader("🗑️ Deletar Marcações do Jogo")
+            
+            marcacoes = buscar_marcacoes(str(data_sorteio))
+            
+            if marcacoes:
+                for nome, tipo, marcacao_id in marcacoes:
+                    col1, col2 = st.columns([4, 1])
+                    
+                    with col1:
+                        icone = "⚽" if tipo == "gol" else "🎯"
+                        st.write(f"{icone} {nome} - {tipo.upper()}")
+                    
+                    with col2:
+                        if st.button("❌", key=f"del_marca_{marcacao_id}"):
+                            deletar_marcacao(marcacao_id)
+                            st.success("Marcação deletada!")
+                            st.rerun()
+            else:
+                st.info("Nenhuma marcação registrada")
             
             st.divider()
             
