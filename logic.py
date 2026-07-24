@@ -102,6 +102,7 @@ def gerar_sorteio(data_jogo, num_times=3):
 
     #Passo 2: Equilibrio dos times
     times = equilibrar_times(jogadores, num_times)
+    
 
     #Passo 4: Salva infos acima no Banco de Dados
     conn = conectar_db()

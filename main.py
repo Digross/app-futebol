@@ -387,6 +387,7 @@ with aba3:
                     st.rerun()
                 else:
                     st.error("❌ Erro ao gerar sorteio")
+
             
             # Mostrar times gerados
             st.divider()

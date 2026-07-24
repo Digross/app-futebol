@@ -571,6 +571,7 @@ def aprovar_solicitacao(solicitacao_id, marcacao_id):
     
     conn.commit()
     conn.close()
+    
 
 def rejeitar_solicitacao(solicitacao_id):
     """Rejeita uma solicitação (mantém na tabela)"""
