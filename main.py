@@ -160,7 +160,6 @@ with aba1:
                         jog_id = next(j[0] for j in jogadores_existentes if j[1] == selecionado_pag)
                         marcar_pagamento(jog_id, data_jogo)
                         st.success(f"✅ Pagamento confirmado!")
-                        st.rerun()
     
     except Exception as e:
         st.error(f"Erro: {str(e)}")
