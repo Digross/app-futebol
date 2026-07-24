@@ -523,15 +523,24 @@ def deletar_sorteio_anterior(data_jogo):
     conn.close()
 
 def inserir_solicitacao_exclusao(marcacao_id, jogador_nome, tipo, data_jogo):
-    """Insere uma solicitação de exclusão de marcação"""
+    """Insere uma solicitação (sem duplicar)"""
     conn = conectar_db()
     cursor = conn.cursor()
     
+    # Verifica se já existe
     cursor.execute('''
-        INSERT INTO solicitacoes_exclusao 
-        (marcacao_id, jogador_nome, tipo, data_jogo, status)
-        VALUES (?, ?, ?, ?, 'pendente')
-    ''', (marcacao_id, jogador_nome, tipo, data_jogo))
+        SELECT id FROM solicitacoes_exclusao
+        WHERE marcacao_id = ? AND status = 'pendente'
+    ''', (marcacao_id,))
+    
+    existe = cursor.fetchone()
+    
+    if not existe:
+        cursor.execute('''
+            INSERT INTO solicitacoes_exclusao 
+            (marcacao_id, jogador_nome, tipo, data_jogo, status)
+            VALUES (?, ?, ?, ?, 'pendente')
+        ''', (marcacao_id, jogador_nome, tipo, data_jogo))
     
     conn.commit()
     conn.close()
@@ -559,6 +568,20 @@ def aprovar_solicitacao(solicitacao_id, marcacao_id):
     
     cursor.execute('DELETE FROM marcacoes WHERE id = ?', (marcacao_id,))
     cursor.execute('DELETE FROM solicitacoes_exclusao WHERE id = ?', (solicitacao_id,))
+    
+    conn.commit()
+    conn.close()
+
+def rejeitar_solicitacao(solicitacao_id):
+    """Rejeita uma solicitação (mantém na tabela)"""
+    conn = conectar_db()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        UPDATE solicitacoes_exclusao
+        SET status = 'rejeitada'
+        WHERE id = ?
+    ''', (solicitacao_id,))
     
     conn.commit()
     conn.close()

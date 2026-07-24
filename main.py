@@ -255,7 +255,7 @@ with aba2:
                 
                 if marcacoes:
                     st.write("**Clique para solicitar exclusão:**")
-                    for nome, tipo, marcacao_id in marcacoes:
+                    for idx, (nome, tipo, marcacao_id) in enumerate(marcacoes):
                         col1, col2 = st.columns([4, 1])
                         
                         with col1:
@@ -263,8 +263,10 @@ with aba2:
                             st.write(f"{icone} {nome} - {tipo.upper()}")
                         
                         with col2:
-                            if st.button("❌", key=f"solicitar_{marcacao_id}"):
-                                st.info("✅ Solicitação enviada ao admin!")
+                            if st.button("❌", key=f"solicitar_{idx}_{marcacao_id}"):
+                                from database import inserir_solicitacao_exclusao
+                                inserir_solicitacao_exclusao(marcacao_id, nome, tipo, data_jogo)
+                                st.success("✅ Solicitação enviada!")
                 else:
                     st.info("Nenhuma marcação registrada")
             else:
@@ -375,7 +377,6 @@ with aba3:
                 from database import deletar_sorteio_anterior
                 deletar_sorteio_anterior(str(data_sorteio))
                 st.success("✅ Sorteio deletado!")
-                st.rerun()
             
             if st.button("🎲 Gerar Sorteio"):
                 from database import deletar_sorteio_anterior
@@ -414,28 +415,39 @@ with aba3:
                 st.info("Nenhum sorteio gerado ainda")
             
             st.divider()
+
+            # SOLICITAÇÃO DE EXCLUSÃO
+            st.subheader("📋 Solicitação de Exclusão de Marcações")
             
-            # DELETAR MARCAÇÕES
-            st.subheader("🗑️ Deletar Marcações do Jogo")
+            from database import buscar_solicitacoes_exclusao, aprovar_solicitacao
             
-            marcacoes = buscar_marcacoes(str(data_sorteio))
+            solicitacoes = buscar_solicitacoes_exclusao(str(data_sorteio))
             
-            if marcacoes:
-                for nome, tipo, marcacao_id in marcacoes:
-                    col1, col2 = st.columns([4, 1])
+            if solicitacoes:
+                st.write("**Solicitações recebidas da aba Marcador:**")
+                for idx, (sol_id, marcacao_id, jogador_nome, tipo) in enumerate(solicitacoes):
+                    col1, col2, col3 = st.columns([3, 1, 1])
                     
                     with col1:
                         icone = "⚽" if tipo == "gol" else "🎯"
-                        st.write(f"{icone} {nome} - {tipo.upper()}")
+                        st.write(f"{icone} {jogador_nome} - {tipo.upper()}")
                     
                     with col2:
-                        if st.button("❌", key=f"del_marca_{marcacao_id}"):
-                            deletar_marcacao(marcacao_id)
+                        if st.button("✅ Aprovar", key=f"aprovar_{idx}_{sol_id}"):
+                            from database import aprovar_solicitacao
+                            aprovar_solicitacao(sol_id, marcacao_id)
                             st.success("Marcação deletada!")
                             st.rerun()
+                    
+                    with col3:
+                        if st.button("❌ Rejeitar", key=f"rejeitar_{idx}_{sol_id}"):
+                            from database import rejeitar_solicitacao
+                            rejeitar_solicitacao(sol_id)
+                            st.info("Solicitação rejeitada!")
+                            st.rerun()
             else:
-                st.info("Nenhuma marcação registrada")
-            
+                st.info("Nenhuma solicitação pendente")
+
             st.divider()
             
             # Gerenciar jogadores

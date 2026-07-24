@@ -50,9 +50,8 @@ def calcular_nota_jogadores(jogador_id):
 
     return media
 
-
 def equilibrar_times(jogadores, num_times=3):
-    """Distribui EXATAMENTE 7 por time, restante em time extra"""
+    """Cria EXATAMENTE num_times com 7 cada, sobra em time extra"""
     
     import random
 
@@ -69,58 +68,20 @@ def equilibrar_times(jogadores, num_times=3):
     random.shuffle(jogadores_com_notas)
 
     times = {}
-    
-    # EXATAMENTE 7 por time
     total_por_time = 7
     idx = 0
     
+    # Cria EXATAMENTE num_times com 7 cada
     for num_time in range(1, num_times + 1):
         times[num_time] = jogadores_com_notas[idx:idx+total_por_time]
         idx += total_por_time
-
-    # Excedentes em time extra
+    
+    # Sobra em time extra
     if idx < len(jogadores_com_notas):
         times[num_times + 1] = jogadores_com_notas[idx:]
-
-    return times
-
-    #Ordenação das notas (maiores primeiro)
-    jogadores_com_notas.sort(key=lambda x: x['nota'], reverse=True)
-
-    #Inicia os times
-    times = {i: [] for i in range(1, num_times + 1)}
     
-    jogadores_por_time = 7
-    idx_jogador = 1
-
-    #Distribui 7 jogadores por time
-    for num_time in range(1, num_times + 1):
-        for _ in range(jogadores_por_time):
-            if idx_jogador < len(jogadores_com_notas):
-                times[num_time].append(jogadores_com_notas[idx_jogador])
-                idx_jogador += 1
-
-    #Time excedente (se sobrar)
-    if idx_jogador < len(jogadores_com_notas):
-        times[num_times + 1] = []
-        while idx_jogador < len(jogadores_com_notas):
-            times[num_times + 1].append(jogadores_com_notas[idx_jogador])
-            idx_jogador += 1
-
     return times
 
-    #Ordenação das notas
-    jogadores_com_notas.sort(key=lambda x: x['nota'], reverse=True)
-
-    #Inicia os times
-    times = {i: [] for i in range(1, num_times +1)}
-
-    #Distribuição dos jogadores (draft)
-    for idx, jogador in enumerate(jogadores_com_notas):
-        time_num = (idx % num_times) +1
-        times[time_num].append(jogador)
-
-    return times
 
 def validar_posicoes(times):
     """Apenas valida que tem jogadores"""
