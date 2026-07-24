@@ -30,6 +30,8 @@ CORES = {
 # CONFIG PAGE
 st.set_page_config(page_title="BOLA Y BRASA", layout="wide", initial_sidebar_state="collapsed")
 
+# RESTO DO CÓDIGO AQUI
+
 # CUSTOMIZAR ABAS
 st.markdown("""
 <style>
@@ -93,7 +95,8 @@ st.markdown(f"""
 # HEADER - LOGO
 col1, col2, col3 = st.columns([1, 1, 1])
 with col2:
-    st.image("brasao.png", width=80)
+    st.image("brasaoapp.png", width=800)
+
 
 st.markdown("""
 <style>
