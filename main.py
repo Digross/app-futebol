@@ -21,20 +21,45 @@ iniciar_banco()
 
 # CORES
 CORES = {
-    "azul_escuro": "#06111D",
-    "dourado": "#2F388C", #botões
+    "azul_escuro": "#1F1F64CE",
+    "dourado": "#A96D06", #botões
     "branco": "#FFFFFF",
-    "vermelho": "#79A1E5" #destaque data
+    "vermelho": "#475E86" #destaque data
 }
 
 # CONFIG PAGE
 st.set_page_config(page_title="BOLA Y BRASA", layout="wide", initial_sidebar_state="collapsed")
 
+# CUSTOMIZAR ABAS
+st.markdown("""
+<style>
+    [data-baseweb="tab-list"] {
+        justify-content: center !important;
+        gap: 15px !important;
+        border-bottom: none !important;
+    }
+    
+    [data-baseweb="tab"] {
+        background-color: #2a2a2a !important;
+        border: 2px solid #D4AF37 !important;
+        border-radius: 25px !important;
+        color: #FFFFFF !important;
+        font-weight: bold !important;
+        padding: 12px 24px !important;
+    }
+    
+    [data-baseweb="tab"][aria-selected="true"] {
+        background-color: #D4AF37 !important;
+        color: #003366 !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # ESTILO ÚNICO - TUDO JUNTO
 st.markdown(f"""
 <style>
     .stApp {{
-        background: linear-gradient(135deg, {CORES['azul_escuro']} 0%, #1a4d7a 100%);
+        background: linear-gradient(1000deg, {CORES['azul_escuro']} 100%, #475E86 0%);
     }}
     
     h1, h2, h3 {{
@@ -70,14 +95,40 @@ col1, col2, col3 = st.columns([1, 1, 1])
 with col2:
     st.image("brasao.png", width=80)
 
-st.divider()
+st.markdown("""
+<style>
+    /* Centraliza as abas */
+    [role="tablist"] {
+        justify-content: center !important;
+        gap: 15px !important;
+    }
+    
+    /* Estilo dos botões */
+    [role="tab"] {
+        background-color: #2a2a2a !important;
+        border: 2px solid #666666 !important;
+        border-radius: 25px !important;
+        color: #FFFFFF !important;
+        font-weight: bold !important;
+        padding: 12px 24px !important;
+    }
+    
+    /* Aba selecionada */
+    [role="tab"][aria-selected="true"] {
+        background-color: #475E86 !important;
+        color: #000000 !important;
+        font-weight: bold;
+        font-style: italic;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # ABAS
 aba1, aba2, aba3 = st.tabs(["✅ Confirmação", "⚽ Marcador", "🎲 Sorteio"])
 
 # ===================== ABA 1: CONFIRMAÇÃO =====================
 with aba1:
-    st.markdown(f"<h2 style='text-align: center;'>Confirme sua Presença!</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align: center;border:2px solid #666666;border-radius: 10px;'>Confirme sua Presença!</h2>", unsafe_allow_html=True)
     
     try:
         data_jogo = buscar_data_jogo_atual()
@@ -98,7 +149,7 @@ with aba1:
             st.divider()
             
             # SEÇÃO 1: CONFIRMAÇÃO PRESENÇA
-            st.subheader("✅ Já Jogou Conosco?")
+            st.subheader("✅ Já jogou antes?")
             jogadores_existentes = buscar_todos_jogadores()
             
             if jogadores_existentes:
@@ -167,64 +218,35 @@ with aba1:
 
 # ===================== ABA 2: MARCADOR =====================
 with aba2:
-    st.markdown(f"<h2 style='text-align: center;'>⚽ Marcador de Gols</h2>", unsafe_allow_html=True)
+    st.header("⚽ Marcador de Gols e Assistências")
+    
+    from database import inserir_marcacao, buscar_marcacoes, contar_marcacoes, deletar_marcacao
+    from datetime import datetime
+    
+    data_jogo = buscar_data_jogo_atual()
+    
+    # DATA FORMATADA
+    if data_jogo:
+        data_formatada = datetime.strptime(str(data_jogo), "%Y-%m-%d").strftime("%d/%m/%Y")
+        st.markdown(f"""
+        <div style='text-align: center; background: #DC143C; padding: 10px; border-radius: 10px;'>
+            <h3 style='color: #FFFFFF; margin: 0;'>📅 {data_formatada}</h3>
+        </div>
+        """, unsafe_allow_html=True)
     
     try:
         data_jogo = buscar_data_jogo_atual()
         
+        # VERIFICA SE PODE MARCAR
         if data_jogo:
-            st.info(f"📅 Data: {data_jogo}")
+            data_jogo_obj = datetime.strptime(str(data_jogo), "%Y-%m-%d").date()
+            data_atual = datetime.now().date()
             
-            jogadores = buscar_jogadores_confirmados(data_jogo)
-            
-            if jogadores:
-                nomes_jogadores = [j[1] for j in jogadores]
+            # Se o jogo já passou E não é admin, mostra apenas ranking
+            if data_atual > data_jogo_obj and not st.session_state.get('admin_autenticado', False):
+                st.info("⏳ Jogo encerrado. Apenas admins podem editar marcações.")
                 
-                st.subheader("⚽ Registrar Gol e Assistência")
-                
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.write("**⚽ Quem fez o gol?**")
-                    jogador_gol = st.selectbox(
-                        "Selecione (obrigatório):",
-                        nomes_jogadores,
-                        key="marcador_gol",
-                        index=None,
-                        placeholder="🔍 Procure..."
-                    )
-                
-                with col2:
-                    st.write("**🎯 Quem deu a assistência?**")
-                    jogador_assist = st.selectbox(
-                        "Selecione (opcional):",
-                        nomes_jogadores,
-                        key="marcador_assist",
-                        index=None,
-                        placeholder="🔍 Procure..."
-                    )
-                
-                if st.button("📝 Registrar Jogada", key="btn_registrar_jogada"):
-                    if not jogador_gol:
-                        st.error("❌ Selecione quem fez o gol!")
-                    else:
-                        jogador_gol_id = next(j[0] for j in jogadores if j[1] == jogador_gol)
-                        inserir_marcacao(jogador_gol_id, data_jogo, "gol")
-                        
-                        if jogador_assist:
-                            jogador_assist_id = next(j[0] for j in jogadores if j[1] == jogador_assist)
-                            inserir_marcacao(jogador_assist_id, data_jogo, "assistência")
-                            st.success(f"⚽ {jogador_gol} marcou! 🎯 {jogador_assist} assistiu!")
-                        else:
-                            st.success(f"⚽ {jogador_gol} marcou!")
-                        
-                        st.rerun()
-                
-                st.divider()
-                
-                # TABELA DE RANKING
-                st.subheader("🏆 Ranking do Jogo")
-                
+                st.subheader("🏆 Ranking Final")
                 stats = contar_marcacoes(data_jogo)
                 
                 if stats:
@@ -232,48 +254,91 @@ with aba2:
                     for nome, gols, assists in stats:
                         gols = gols or 0
                         assists = assists or 0
-                        df_stats.append({
-                            "Nome": nome,
-                            "⚽ Gols": gols,
-                            "🎯 Assistências": assists
-                        })
+                        df_stats.append({"Nome": nome, "⚽ Gols": gols, "🎯 Assistências": assists})
                     
-                    df = pd.DataFrame(df_stats)
-                    df = df.sort_values(by=["⚽ Gols", "🎯 Assistências"], ascending=False).reset_index(drop=True)
+                    df = pd.DataFrame(df_stats).sort_values(by=["⚽ Gols", "🎯 Assistências"], ascending=False).reset_index(drop=True)
                     df.index = df.index + 1
-                    
                     st.dataframe(df, width='stretch')
                 else:
-                    st.info("Nenhuma marcação ainda")
-                
-                st.divider()
-                
-                # SOLICITAR EXCLUSÃO
-                st.subheader("🗑️ Solicitar Exclusão de Marcação")
-                
-                marcacoes = buscar_marcacoes(data_jogo)
-                
-                if marcacoes:
-                    st.write("**Clique para solicitar exclusão:**")
-                    for idx, (nome, tipo, marcacao_id) in enumerate(marcacoes):
-                        col1, col2 = st.columns([4, 1])
-                        
-                        with col1:
-                            icone = "⚽" if tipo == "gol" else "🎯"
-                            st.write(f"{icone} {nome} - {tipo.upper()}")
-                        
-                        with col2:
-                            if st.button("❌", key=f"solicitar_{idx}_{marcacao_id}"):
-                                from database import inserir_solicitacao_exclusao
-                                inserir_solicitacao_exclusao(marcacao_id, nome, tipo, data_jogo)
-                                st.success("✅ Solicitação enviada!")
-                else:
                     st.info("Nenhuma marcação registrada")
+            
+            # Se ainda não passou OU é admin, mostra tudo
             else:
-                st.info("Nenhum jogador confirmado para essa data")
+                jogadores = buscar_jogadores_confirmados(data_jogo)
+                
+                if jogadores:
+                    nomes_jogadores = [j[1] for j in jogadores]
+                    
+                    st.subheader("⚽ Registrar Gol e Assistência")
+                    
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.write("**⚽ Quem fez o gol?**")
+                        jogador_gol = st.selectbox("Selecione (obrigatório):", nomes_jogadores, key="marcador_gol", index=None, placeholder="🔍 Procure...")
+                    
+                    with col2:
+                        st.write("**🎯 Quem deu a assistência?**")
+                        jogador_assist = st.selectbox("Selecione (opcional):", nomes_jogadores, key="marcador_assist", index=None, placeholder="🔍 Procure...")
+                    
+                    if st.button("📝 Registrar Jogada", key="btn_registrar_jogada"):
+                        if not jogador_gol:
+                            st.error("❌ Selecione quem fez o gol!")
+                        else:
+                            jogador_gol_id = next(j[0] for j in jogadores if j[1] == jogador_gol)
+                            inserir_marcacao(jogador_gol_id, data_jogo, "gol")
+                            
+                            if jogador_assist:
+                                jogador_assist_id = next(j[0] for j in jogadores if j[1] == jogador_assist)
+                                inserir_marcacao(jogador_assist_id, data_jogo, "assistência")
+                                st.success(f"⚽ {jogador_gol} marcou! 🎯 {jogador_assist} assistiu!")
+                            else:
+                                st.success(f"⚽ {jogador_gol} marcou!")
+                            st.rerun()
+                    
+                    st.divider()
+                    
+                    st.subheader("🏆 Ranking do Jogo")
+                    stats = contar_marcacoes(data_jogo)
+                    
+                    if stats:
+                        df_stats = []
+                        for nome, gols, assists in stats:
+                            gols = gols or 0
+                            assists = assists or 0
+                            df_stats.append({"Nome": nome, "⚽ Gols": gols, "🎯 Assistências": assists})
+                        
+                        df = pd.DataFrame(df_stats).sort_values(by=["⚽ Gols", "🎯 Assistências"], ascending=False).reset_index(drop=True)
+                        df.index = df.index + 1
+                        st.dataframe(df, width='stretch')
+                    else:
+                        st.info("Nenhuma marcação ainda")
+                    
+                    st.divider()
+                    
+                    st.subheader("🗑️ Solicitar Exclusão de Marcação")
+                    marcacoes = buscar_marcacoes(data_jogo)
+                    
+                    if marcacoes:
+                        st.write("**Clique para solicitar exclusão:**")
+                        for idx, (nome, tipo, marcacao_id) in enumerate(marcacoes):
+                            col1, col2 = st.columns([4, 1])
+                            
+                            with col1:
+                                icone = "⚽" if tipo == "gol" else "🎯"
+                                st.write(f"{icone} {nome} - {tipo.upper()}")
+                            
+                            with col2:
+                                if st.button("❌", key=f"solicitar_{idx}_{marcacao_id}"):
+                                    from database import inserir_solicitacao_exclusao
+                                    inserir_solicitacao_exclusao(marcacao_id, nome, tipo, data_jogo)
+                                    st.success("✅ Solicitação enviada!")
+                    else:
+                        st.info("Nenhuma marcação registrada")
+                else:
+                    st.info("Nenhum jogador confirmado para essa data")
         else:
             st.warning("⚠️ Nenhuma data definida pelos admins")
-    
     except Exception as e:
         st.error(f"Erro: {str(e)}")
 
